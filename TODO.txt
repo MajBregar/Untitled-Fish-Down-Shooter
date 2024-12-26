@@ -1,0 +1,11 @@
+fix animations - bregar
+add enemies
+add spawn loop
+fix player movement - strah
+UI + game tips
+
+
+
+#
+extra sounds
+particles
