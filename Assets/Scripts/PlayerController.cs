@@ -24,6 +24,8 @@ public class PlayerController : MonoBehaviour {
     private Rigidbody rb;
     public CameraTracker camTracker;
 
+    public UIController UI;
+
     private Animator playerAnimator;
     private Animator weaponAnimator;
 
@@ -50,23 +52,25 @@ public class PlayerController : MonoBehaviour {
             meleeCooldownTimer = gameTime + meleeCooldown;
             actionLockTimer = gameTime + meleeDuration;
             playerAnimator.SetTrigger("Melee");
+            weaponAnimator.SetTrigger("Melee");
 
-        } else if (shootInput == 1 && shootCooldownTimer < gameTime && actionLockTimer < gameTime){
+        } else if (shootInput == 1 && shootCooldownTimer < gameTime && actionLockTimer < gameTime && weapon.loadedBolts >= 1){
             //shoot bolt
-            AnimatorStateInfo stateInfo = weaponAnimator.GetCurrentAnimatorStateInfo(0);
-            if (stateInfo.IsName("Weapon Idle")){
-                playerAnimator.SetTrigger("Shoot");
-                weaponAnimator.SetTrigger("Shoot");
-                weapon.Shoot();
-                shootCooldownTimer = gameTime + shootCooldown;
-                actionLockTimer = gameTime + shootDuration;
-            }
-        } else if (shootInput == 0 && meleeInput == 0 && actionLockTimer < gameTime && weapon.loadedBolts < weapon.currentMax && reloadCooldownTimer < gameTime){
+            playerAnimator.SetTrigger("Shoot");
+            weaponAnimator.SetTrigger("Shoot");
+            weapon.Shoot();
+            shootCooldownTimer = gameTime + shootCooldown;
+            actionLockTimer = gameTime + shootDuration;
+
+            UI.ChangeWeaponUI(weapon.loadedBolts);
+        } else if (meleeInput == 0 && actionLockTimer < gameTime && weapon.loadedBolts < weapon.currentMax && reloadCooldownTimer < gameTime){
             AnimatorStateInfo stateInfo = weaponAnimator.GetCurrentAnimatorStateInfo(0);
             if (stateInfo.IsName("Weapon Idle")){
                 reloadCooldownTimer = gameTime + reloadDuration;
                 weaponAnimator.SetTrigger("Reload");
                 weapon.LoadBolt();
+
+                UI.ChangeWeaponUI(weapon.loadedBolts);
             }
         }
 
