@@ -4,9 +4,17 @@ public class PlayerWeapon : MonoBehaviour {
     public float boltSpeed = 30f;   
     public int loadedBolts = 0;
 
-    public int currentMax = 5;
+    public int currentMax = 0;
     public int maxLoadedBolts = 5;
     public float projectileSpread = 10f;
+
+    public GameLoop game;
+
+    public Vector3 boxSize = new Vector3(1f, 1f, 1f);
+    public Vector3 meleeAttackOriginPosition;
+    public Vector3 meleeAttackOriginRotation;
+
+    public LayerMask meleeTargetLayers;
 
     public GameObject[] weaponPrefabs;
     private GameObject currentModel;
@@ -24,6 +32,12 @@ public class PlayerWeapon : MonoBehaviour {
         if (boltProjectilePrefab == null){
             Debug.Log("bolt prefab not found");
 
+        }
+    }
+
+    public void AddBolt(){
+        if (currentMax < maxLoadedBolts){
+            currentMax += 1;
         }
     }
 
@@ -48,7 +62,49 @@ public class PlayerWeapon : MonoBehaviour {
             boltRb.linearVelocity = boltInstance.transform.right * boltSpeed;
         }
         loadedBolts = 0;
-    }   
+    }
+
+    public void Melee(){
+
+        Quaternion rot = transform.rotation * Quaternion.Euler(meleeAttackOriginRotation);
+        Vector3 attackPosition = transform.position + transform.rotation * meleeAttackOriginPosition;
+
+        Collider[] hitColliders = Physics.OverlapBox(attackPosition, boxSize / 2, rot, meleeTargetLayers);
+
+        foreach (Collider hit in hitColliders) {
+
+            Transform parentTransform = hit.gameObject.transform.parent;
+            if (parentTransform != null) {
+                GameObject parentObject = parentTransform.gameObject;
+                string parentTag = parentObject.tag;
+                ServiceHit(parentObject, parentTag);
+            }
+        }
+    }
+
+    private void ServiceHit(GameObject hitObject, string tag){
+        if (tag == "Enemy"){
+
+
+
+        } else if (tag == "WaveCrate"){
+            Vector3 cratePosition = hitObject.transform.position;
+            Destroy(hitObject);
+            game.WaveCrateBreakEvent(cratePosition);
+        }
+
+    }
+
+    private void OnDrawGizmos()
+    {
+        Quaternion rot = transform.rotation * Quaternion.Euler(meleeAttackOriginRotation);
+        Vector3 attackPosition = transform.position + transform.rotation * meleeAttackOriginPosition;
+
+        Gizmos.color = Color.red;
+        Gizmos.matrix = Matrix4x4.TRS(attackPosition, rot, Vector3.one);
+        Gizmos.DrawWireCube(Vector3.zero, boxSize);
+        
+    }
 
     public void SwapPrefab(int index) {
         if (index >= 0 && index < weaponPrefabs.Length) {
@@ -60,4 +116,5 @@ public class PlayerWeapon : MonoBehaviour {
             Debug.LogError("Invalid index: " + index);
         }
     }
+    
 }

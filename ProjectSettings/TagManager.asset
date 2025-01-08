@@ -8,6 +8,9 @@ TagManager:
   - Weapon
   - Projectile
   - PlayerModel
+  - ProgressBar
+  - WaveCrate
+  - BoltPickup
   layers:
   - Default
   - TransparentFX
@@ -16,8 +19,8 @@ TagManager:
   - Water
   - UI
   - Projectiles
-  - 
-  - 
+  - Enemy
+  - MeleeHittable
   - 
   - 
   - 

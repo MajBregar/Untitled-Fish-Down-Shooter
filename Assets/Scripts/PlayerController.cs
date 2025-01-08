@@ -41,6 +41,10 @@ public class PlayerController : MonoBehaviour {
 
     }
 
+    public void PickupBolt(){
+        weapon.AddBolt();
+    }
+
     void Update() {
         //shooting logic
 
@@ -53,6 +57,7 @@ public class PlayerController : MonoBehaviour {
             actionLockTimer = gameTime + meleeDuration;
             playerAnimator.SetTrigger("Melee");
             weaponAnimator.SetTrigger("Melee");
+            weapon.Melee();
 
         } else if (shootInput == 1 && shootCooldownTimer < gameTime && actionLockTimer < gameTime && weapon.loadedBolts >= 1){
             //shoot bolt
