@@ -37,8 +37,6 @@ public class PlayerController : MonoBehaviour {
         
         weaponAnimator = weaponObject.GetComponent<Animator>();
         playerAnimator = modelObject.GetComponent<Animator>();
-
-
     }
 
     public void PickupBolt(){

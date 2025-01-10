@@ -20,6 +20,7 @@ public class GameLoop : MonoBehaviour
         progressBar = GameObject.FindWithTag("ProgressBar");
         waveManager = new WaveManager();
         StateChange(gameState);
+
     }
 
     // Update is called once per frame
@@ -35,6 +36,7 @@ public class GameLoop : MonoBehaviour
             case GameState.WaveReset:
                 StateChange(GameState.GameIdle);
                 SpawnWaveCrate();
+                UI.ShowGameTip();
                 break;
             case GameState.GameIdle:
                 ShowProgressBar(false);
@@ -61,6 +63,10 @@ public class GameLoop : MonoBehaviour
         SetWaveProgressBar(1f);
         StateChange(GameState.GameWaveInProgress);
         SpawnBoltPickups(cratePosition);
+
+        if (UI.showingGameTip == true){
+            UI.HideGameTip();
+        }
     }
 
 
