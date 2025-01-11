@@ -2,6 +2,14 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
+
+     void Update()
+    {
+        if (Vector3.Distance(transform.position, Vector3.zero) > 200)
+        {
+            Destroy(transform.parent.gameObject);
+        }
+    }
     void OnCollisionEnter(Collision collision)
     {
         GameObject hitObject = collision.gameObject;

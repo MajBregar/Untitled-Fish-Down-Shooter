@@ -6,12 +6,10 @@ public class GameLoop : MonoBehaviour
     public GameState gameState;
     public GameObject waveCratePrefab;
     public GameObject boltPickupPrefab;
-
     public UIController UI;
     private WaveManager waveManager;
     private CurrentWaveData upcomingWave;
     private GameObject progressBar;
-
     private float waveProgress = 1f;
 
 
@@ -24,8 +22,7 @@ public class GameLoop : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         
     }
 
