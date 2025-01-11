@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public class GameLoop : MonoBehaviour
 {
@@ -25,7 +26,11 @@ public class GameLoop : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (gameState == GameState.GameWaveInProgress && upcomingWave.spawningEnemies)
+        {
+            SpawnEnemies();
+        }
+
     }
 
     void StateChange(GameState newState){
@@ -43,7 +48,7 @@ public class GameLoop : MonoBehaviour
                 break;
             case GameState.GameWaveInProgress:
 
-                //spawning
+                upcomingWave.spawningEnemies = true;
 
                 break;
             case GameState.GameEnd:
@@ -63,7 +68,72 @@ public class GameLoop : MonoBehaviour
         SpawnBoltPickups(cratePosition);
     }
 
+    void SpawnEnemies() 
+    {
 
+        System.Random random = new System.Random();
+
+        upcomingWave.enemiesToSpawn += Time.deltaTime * 4;
+        for (int i = 0; i < upcomingWave.enemiesToSpawn - 1; i++)
+        {
+
+            int enemyToSpawn = -1;
+            if (upcomingWave.tankEnemyCount > 0)
+            {
+                enemyToSpawn = 2;
+
+            } else if (upcomingWave.standardEnemyCount > 0)
+            {
+                enemyToSpawn = 0;
+            } else if (upcomingWave.fastEnemyCount > 0)
+            {
+                enemyToSpawn = 1;
+            } else
+            {
+                enemyToSpawn = random.Next(3);
+            }
+
+            double angle = random.NextDouble() * 2 * Math.PI;
+            int distance = 40;
+
+            Vector3 spawnLocation = new Vector3(
+                (float) Math.Cos(angle) * distance,
+                0,
+                (float) Math.Sin(angle) * distance
+            );
+
+            Debug.Log("Spawning" + enemyToSpawn);
+            // TODO - player position???
+
+            switch (enemyToSpawn)
+            {
+                case 0:
+                    Instantiate(waveCratePrefab, spawnLocation, transform.rotation);
+                    upcomingWave.standardEnemyCount--;
+                    break;
+
+                case 1:
+                    Instantiate(waveCratePrefab, spawnLocation, transform.rotation);
+                    upcomingWave.fastEnemyCount--;
+                    break;
+
+                case 2:
+                    Instantiate(waveCratePrefab, spawnLocation, transform.rotation);
+                    upcomingWave.tankEnemyCount--;
+                    break;
+            }
+
+            
+        }
+
+        upcomingWave.enemiesToSpawn %= 1;
+
+        if (upcomingWave.standardEnemyCount <= 0 && upcomingWave.fastEnemyCount <= 0 && upcomingWave.tankEnemyCount <= 0)
+        {
+            upcomingWave.spawningEnemies = false;
+        }
+
+    }
 
     void SetWaveProgressBar(float p){
         waveProgress = p;

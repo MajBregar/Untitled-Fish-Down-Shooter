@@ -2,12 +2,17 @@ using UnityEngine;
 
 
 public class CurrentWaveData {
-    public int totalEnemyCount; 
+    public int totalEnemyCount;
+
     public int standardEnemyCount;
     public int fastEnemyCount;
     public int tankEnemyCount;
+
     public int enemiesKilled;
     public int spawnBolts;
+
+    public double enemiesToSpawn;
+    public bool spawningEnemies = false;
 }
 
 
@@ -34,6 +39,7 @@ public class WaveManager {
             newWave.enemiesKilled = 0;
             newWave.spawnBolts = 0;
         }
+        newWave.enemiesToSpawn = 1.0;
         return newWave;
     }
 
