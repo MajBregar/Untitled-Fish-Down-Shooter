@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public class StandardEnemyController : MonoBehaviour
+public class HeavyEnemyController : MonoBehaviour
 {
     // Enemy attributes
-    public int Health = 10;
+    public int Health = 100;
     public int Difficulty = 10;
     public int CashDrop = 3;
 
@@ -15,7 +15,6 @@ public class StandardEnemyController : MonoBehaviour
     public float MeleeAttackRange = 5f;
     public float MeleeAttackDuration = 1f;
     public float MeleeAttackCooldown = 1.5f;
-    public float RangedAttackCooldown = 10f;
 
     // Animation
     public float DeathAnimationLength = 2f;
@@ -24,20 +23,15 @@ public class StandardEnemyController : MonoBehaviour
 
     // Internal state
     private float lastMeleeAttackTime = 0f;
-    private float lastRangedAttackTime = 0f;
     private float meleeDurationTimer = 0f;
 
     private Transform playerTransform;
     private bool avoidDisplacement = false;
     private Quaternion originalRotation;
 
-    // Ranged attack properties
-    public GameObject BubblePrefab; // Prefab for the ranged attack
-    public Transform FirePoint; // Position from which the bubble is fired
-
     void Start()
     {
-        // Initialization logic (e.g., finding the player)
+        // Initialization logic
         playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
     }
 
@@ -80,7 +74,6 @@ public class StandardEnemyController : MonoBehaviour
     {
         float elapsedTime = 0f;
         Quaternion targetRotation = Quaternion.LookRotation(playerDirection) * Quaternion.Euler(-MeleeAttackPitchAngle, 0, 0);
-        bool playerHit = false;
 
         while (elapsedTime < MeleeAttackDuration)
         {
@@ -99,17 +92,10 @@ public class StandardEnemyController : MonoBehaviour
         // Reset rotation after attack
         transform.rotation = originalRotation;
 
-        // Check for player hit
-        playerHit = ScanForMeleeAttack(1f);
-
-        if (!playerHit)
-        {
-            // Trigger ranged attack if melee misses
-            PerformRangedAttack();
-        }
+        ScanForMeleeAttack(1f); // Check for player hit during melee
     }
 
-    private bool ScanForMeleeAttack(float scanSize)
+    private void ScanForMeleeAttack(float scanSize)
     {
         Vector3 playerDirection = (playerTransform.position - transform.position).normalized * MeleeAttackRange;
         Vector3 attackLocation = transform.position + playerDirection;
@@ -122,38 +108,13 @@ public class StandardEnemyController : MonoBehaviour
             PlayerController player = playerTransform.GetComponent<PlayerController>();
             if (player != null)
             {
-                player.Die();
+                player.Die(); // Kill Player
                 Debug.Log("Player hit by melee attack");
-                return true;
             }
         }
-        return false;
     }
 
-    private void PerformRangedAttack()
-    {
-        if (BubblePrefab == null || FirePoint == null) return;
-
-        // Stop movement
-        avoidDisplacement = true;
-
-        // Instantiate bubble and fire towards the player
-        GameObject bubble = Instantiate(BubblePrefab, FirePoint.position, Quaternion.identity);
-        Vector3 direction = (playerTransform.position - FirePoint.position).normalized;
-        Rigidbody bubbleRb = bubble.GetComponent<Rigidbody>();
-        if (bubbleRb != null)
-        {
-            bubbleRb.linearVelocity = direction * 10f; // Adjust speed as needed
-        }
-
-        Debug.Log("Performed ranged attack");
-
-        // Resume chasing after firing
-        avoidDisplacement = false;
-    }
-
-    private void ChasePlayer()
-    {
+    private void ChasePlayer()    {
         Vector3 direction = (playerTransform.position - transform.position).normalized;
         Quaternion targetRotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, TurnSpeed * Time.deltaTime);
@@ -164,8 +125,7 @@ public class StandardEnemyController : MonoBehaviour
         }
     }
 
-    public void TakeDamage(int damage)
-    {
+    public void TakeDamage(int damage)    {
         Health -= damage;
         Debug.Log($"Enemy took {damage} damage, remaining health: {Health}");
 
@@ -175,8 +135,7 @@ public class StandardEnemyController : MonoBehaviour
         }
     }
 
-    private void Die()
-    {
+    private void Die()    {
         Debug.Log("Enemy is dead.");
         // Implement death animation and logic
         Destroy(gameObject, DeathAnimationLength);

@@ -117,11 +117,17 @@ public class PlayerController : MonoBehaviour {
                 rb.linearVelocity = Vector3.zero;
             }
         }
-
+        
 
 
         //FOR ANIMATIONS
         playerAnimator.SetFloat("PlayerSpeed", rb.linearVelocity.magnitude);
+    }
+
+    public void Die()    {
+        Debug.Log("Player is dead.");
+        // Implement death animation and logic
+        Destroy(gameObject,0.5f);
     }
 
     
