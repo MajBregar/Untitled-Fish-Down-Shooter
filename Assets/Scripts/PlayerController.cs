@@ -1,31 +1,48 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class PlayerController : MonoBehaviour {
 
+public enum PlayerActions {
+    PlayerIdleOrRunning,
+    PlayerMelee,
+    PlayerShoot,
+    PlayerReloading
+}
+
+public class PlayerController : MonoBehaviour {
+    //movement
     public float acceleration = 10f;
     public float maxSpeed = 5f;
     public float friction = 5f;
 
+    //death
+    public bool dead = false;
+    public float deathScreenDuration = 2f;
+    public float deathTimer = 0f;
+
+
+    private PlayerActions curState = PlayerActions.PlayerIdleOrRunning;
+
+    //melee
     public float meleeCooldown = 0.5f;
-    public float shootCooldown = 0.2f;
     public float meleeDuration = 0.5f;
-    public float shootDuration = 0.1f;
-    public float reloadDuration = 0.5f;
-
-    private float actionLockTimer = 0f;
     private float meleeCooldownTimer = 0f;
-    private float shootCooldownTimer = 0f;
-    private float reloadCooldownTimer = 0f;
+    private float meleeDurationTimer = 0f;
 
+    //shooting
+    public float shootDuration = 0.1f;
+    private float shootDurationTimer = 0f;
+
+    //reloading
+    public float reloadDuration = 0.5f;
+    private float reloadDurationTimer = 0f;
+
+    //system
     private float gameTime = 0f;
-
     public PlayerWeapon weapon;
     private Rigidbody rb;
     public CameraTracker camTracker;
-
     public UIController UI;
-
     private Animator playerAnimator;
     private Animator weaponAnimator;
 
@@ -39,54 +56,113 @@ public class PlayerController : MonoBehaviour {
         playerAnimator = modelObject.GetComponent<Animator>();
     }
 
+    public void TakeDamage(){
+        if (dead == true) return;
+
+        GameObject modelObject = GameObject.FindWithTag("PlayerModel");
+        GameObject weaponObject = weapon.currentModel;
+        
+        //disable player collider
+        Collider[] colliders = GetComponents<Collider>();
+        foreach (Collider collider in colliders) {
+            collider.enabled = false;
+        }
+
+        //freeze position
+        rb.constraints = RigidbodyConstraints.FreezePosition;
+
+        //disable player model visibility
+        Renderer modelRenderer = modelObject.GetComponent<Renderer>();
+        if (modelRenderer != null) {
+            modelRenderer.enabled = false;
+        }
+
+        //disable weapon model visibility
+        Renderer weaponRenderer = weaponObject.GetComponentInChildren<Renderer>();
+        if (weaponRenderer != null) {
+            weaponRenderer.enabled = false;
+        }
+
+        deathTimer = Time.time + deathScreenDuration;
+        dead = true;
+    }
+
     public void PickupBolt(){
         weapon.AddBolt();
     }
 
     void Update() {
-        //shooting logic
+        if (dead == true && Time.time < deathTimer){
+            return;
+        } else if (dead == true && Time.time >= deathTimer){
+            //reset world
+            Scene currentScene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(currentScene.name);
+            return;
+        }
 
         int shootInput = (int) Input.GetAxisRaw("Fire1");
         int meleeInput = (int) Input.GetAxisRaw("Fire2");
 
-        if (meleeInput == 1 && meleeCooldownTimer < gameTime && actionLockTimer < gameTime) {
-            //melee attack
-            meleeCooldownTimer = gameTime + meleeCooldown;
-            actionLockTimer = gameTime + meleeDuration;
-            playerAnimator.SetTrigger("Melee");
-            weaponAnimator.SetTrigger("Melee");
-            weapon.Melee();
-
-        } else if (shootInput == 1 && shootCooldownTimer < gameTime && actionLockTimer < gameTime && weapon.loadedBolts >= 1){
-            //shoot bolt
-            playerAnimator.SetTrigger("Shoot");
-            weaponAnimator.SetTrigger("Shoot");
-            weapon.Shoot();
-            shootCooldownTimer = gameTime + shootCooldown;
-            actionLockTimer = gameTime + shootDuration;
-
-            UI.ChangeWeaponUI(weapon.loadedBolts);
-        } else if (meleeInput == 0 && actionLockTimer < gameTime && weapon.loadedBolts < weapon.currentMax && reloadCooldownTimer < gameTime){
-            AnimatorStateInfo stateInfo = weaponAnimator.GetCurrentAnimatorStateInfo(0);
-            if (stateInfo.IsName("Weapon Idle")){
-                reloadCooldownTimer = gameTime + reloadDuration;
-                weaponAnimator.SetTrigger("Reload");
-                weapon.LoadBolt();
-
-                UI.ChangeWeaponUI(weapon.loadedBolts);
-            }
-        }
-
-
-
-        //DEBUG GAME RESET - will be used later for death
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            Scene currentScene = SceneManager.GetActiveScene();
-            SceneManager.LoadScene(currentScene.name);
+        switch(curState){
+            case PlayerActions.PlayerIdleOrRunning:
+                if (meleeInput == 1 && gameTime >= meleeCooldownTimer){
+                    SetStateMelee();
+                } else if (shootInput == 1 && weapon.loadedBolts > 0){
+                    SetStateShoot();
+                } else if (weapon.loadedBolts < weapon.currentMax) {
+                    reloadDurationTimer = gameTime + reloadDuration;
+                    weaponAnimator.SetTrigger("Reload");
+                    curState = PlayerActions.PlayerReloading;
+                }
+                break;
+            case PlayerActions.PlayerMelee:
+                if (gameTime >= meleeDurationTimer){
+                    curState = PlayerActions.PlayerIdleOrRunning;
+                }
+                break;
+            case PlayerActions.PlayerReloading:
+                if (gameTime >= reloadDurationTimer){
+                    //finished animation without transition
+                    weapon.LoadBolt();
+                    UI.ChangeWeaponUI(weapon.loadedBolts);
+                    curState = PlayerActions.PlayerIdleOrRunning;
+                } else if (meleeInput == 1 && gameTime >= meleeCooldownTimer) {
+                    SetStateMelee();
+                } else if (shootInput == 1 && weapon.loadedBolts > 0){
+                    SetStateShoot();
+                }
+                break;
+            case PlayerActions.PlayerShoot:
+                if (gameTime >= shootDurationTimer){
+                    curState = PlayerActions.PlayerIdleOrRunning;
+                }
+                break;
+            default:
+                break;
         }
 
         gameTime += Time.deltaTime;
     }
+
+    private void SetStateMelee(){
+        meleeCooldownTimer = gameTime + meleeCooldown;
+        meleeDurationTimer = gameTime + meleeDuration;
+        curState = PlayerActions.PlayerMelee;
+        playerAnimator.SetTrigger("Melee");
+        weaponAnimator.SetTrigger("Melee");
+        weapon.Melee();
+    }
+
+    private void SetStateShoot(){
+        shootDurationTimer = gameTime + shootDuration;
+        curState = PlayerActions.PlayerShoot;
+        playerAnimator.SetTrigger("Shoot");
+        weaponAnimator.SetTrigger("Shoot");
+        weapon.Shoot();
+    }
+
+
 
     void FixedUpdate() {
 
@@ -120,8 +196,6 @@ public class PlayerController : MonoBehaviour {
                 rb.linearVelocity = Vector3.zero;
             }
         }
-
-
 
         //FOR ANIMATIONS
         playerAnimator.SetFloat("PlayerSpeed", rb.linearVelocity.magnitude);

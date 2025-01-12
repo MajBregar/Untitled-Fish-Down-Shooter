@@ -11,6 +11,10 @@ TagManager:
   - ProgressBar
   - WaveCrate
   - BoltPickup
+  - StandardEnemy
+  - FastEnemy
+  - TankEnemy
+  - GameLoop
   layers:
   - Default
   - TransparentFX
@@ -21,7 +25,7 @@ TagManager:
   - Projectiles
   - Enemy
   - MeleeHittable
-  - 
+  - Player
   - 
   - 
   - 

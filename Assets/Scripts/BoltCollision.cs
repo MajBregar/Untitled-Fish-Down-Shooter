@@ -10,21 +10,22 @@ public class Projectile : MonoBehaviour
             Destroy(transform.parent.gameObject);
         }
     }
-    void OnCollisionEnter(Collision collision)
-    {
-        GameObject hitObject = collision.gameObject;
-
-        Debug.Log("Projectile hit: " + hitObject.name);
-
-        Destroy(transform.parent.gameObject);
-    }
-
+    
     void OnTriggerEnter(Collider other)
     {
-        GameObject hitObject = other.gameObject;
+        GameObject hit = other.gameObject;
 
-        Debug.Log("Projectile triggered by: " + hitObject.name);
+        if (hit.tag == "StandardEnemy"){
+            StandardEnemyController enemy = hit.GetComponent<StandardEnemyController>();
+            enemy.TakeDamage(1);
+        } else if (hit.tag == "FastEnemy"){
+            FastEnemyController enemy = hit.GetComponent<FastEnemyController>();
+            enemy.TakeDamage(1);
+        } else if (hit.tag == "TankEnemy"){
+            TankEnemyController enemy = hit.GetComponent<TankEnemyController>();
+            enemy.TakeDamage(1);
+        }
 
-        Destroy(transform.parent.gameObject);
+        Destroy(transform.parent.gameObject); //delete bolt
     }
 }

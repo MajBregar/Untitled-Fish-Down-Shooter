@@ -17,7 +17,7 @@ public class PlayerWeapon : MonoBehaviour {
     public LayerMask meleeTargetLayers;
 
     public GameObject[] weaponPrefabs;
-    private GameObject currentModel;
+    public GameObject currentModel;
 
     public GameObject boltProjectilePrefab = null;
 
@@ -77,16 +77,23 @@ public class PlayerWeapon : MonoBehaviour {
             if (parentTransform != null) {
                 GameObject parentObject = parentTransform.gameObject;
                 string parentTag = parentObject.tag;
-                ServiceHit(parentObject, parentTag);
+                ServiceMeleeHit(parentObject, parentTag);
+            } else {
+                ServiceMeleeHit(hit.gameObject, hit.gameObject.tag);
             }
         }
     }
 
-    private void ServiceHit(GameObject hitObject, string tag){
-        if (tag == "Enemy"){
-
-
-
+    private void ServiceMeleeHit(GameObject hitObject, string tag){
+        if (tag == "StandardEnemy"){
+            StandardEnemyController enemy = hitObject.GetComponent<StandardEnemyController>();
+            enemy.TakeDamage(10);
+        } else if (tag == "FastEnemy"){
+            FastEnemyController enemy = hitObject.GetComponent<FastEnemyController>();
+            enemy.TakeDamage(10);
+        } if (tag == "TankEnemy"){
+            TankEnemyController enemy = hitObject.GetComponent<TankEnemyController>();
+            enemy.TakeDamage(10);
         } else if (tag == "WaveCrate"){
             Vector3 cratePosition = hitObject.transform.position;
             Destroy(hitObject);

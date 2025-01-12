@@ -2,12 +2,14 @@ using UnityEngine;
 
 
 public class CurrentWaveData {
-    public int totalEnemyCount; 
+    public int totalEnemyCount;
     public int standardEnemyCount;
     public int fastEnemyCount;
     public int tankEnemyCount;
     public int enemiesKilled;
     public int spawnBolts;
+    public double enemiesToSpawn;
+    public bool spawningEnemies = false;
 }
 
 
@@ -34,19 +36,20 @@ public class WaveManager {
             newWave.enemiesKilled = 0;
             newWave.spawnBolts = 0;
         }
+        newWave.enemiesToSpawn = 1.0;
         return newWave;
     }
 
     public int[,] waveMobCounts = {
-        {1,0,0, 1},
-        {2,0,0, 0},
+        {1,0,0, 0},
+        {2,0,0, 1},
         {5,0,0, 0},
-        {1,2,0, 0},
+        {1,2,0, 1},
         {0,6,0, 0},
-        {5,0,1, 0},
-        {8,2,2, 0},
+        {5,0,1, 1},
+        {8,2,2, 1},
         {10,4,3, 0},
-        {15,5,3, 0},
+        {15,5,3, 1},
         {25,0,6, 0},
         {20,10,5, 0},
     };
