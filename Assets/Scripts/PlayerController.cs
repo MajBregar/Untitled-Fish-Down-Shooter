@@ -9,11 +9,19 @@ public enum PlayerActions {
     PlayerReloading
 }
 
+public enum PlayerMovement {
+    NoInput,
+    NormalMovement,
+    Dash,
+    Decelerating
+}
+
 public class PlayerController : MonoBehaviour {
     //movement
     public float acceleration = 10f;
     public float maxSpeed = 5f;
     public float friction = 5f;
+    public float dashSpeed = 15f;
 
     //death
     public bool dead = false;
@@ -22,6 +30,13 @@ public class PlayerController : MonoBehaviour {
 
 
     private PlayerActions curState = PlayerActions.PlayerIdleOrRunning;
+    public PlayerMovement curMovement = PlayerMovement.NoInput;
+
+    //dash
+    public float dashDuration = 0.3f;
+    public float dashCooldown = 1.5f;
+    private float dashTimer = 0f;
+    private float dashCooldownTimer = 0f;
 
     //melee
     public float meleeCooldown = 0.5f;
@@ -142,7 +157,22 @@ public class PlayerController : MonoBehaviour {
                 break;
         }
 
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            QuitGame();
+        }
+
         gameTime += Time.deltaTime;
+    }
+
+    void QuitGame()
+    {
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
     }
 
     private void SetStateMelee(){
@@ -168,17 +198,85 @@ public class PlayerController : MonoBehaviour {
 
         float moveForward = Input.GetAxisRaw("Horizontal");
         float moveRight = Input.GetAxisRaw("Vertical");
+        int dashInput = (int) Input.GetAxis("Dash");
+        //Debug.Log(dashInput);
         Vector3 inputDirection = camTracker.RemapInputs(moveForward, moveRight);
 
 
+        switch (curMovement){
+            case PlayerMovement.NoInput:
+
+                if (inputDirection.magnitude > 0) {
+                    curMovement = PlayerMovement.NormalMovement;
+                } else if (rb.linearVelocity.magnitude > 0) {
+                    curMovement = PlayerMovement.Decelerating;
+                }
+
+                break;
+            case PlayerMovement.NormalMovement:
+
+                if (inputDirection.magnitude == 0) {
+                    curMovement = PlayerMovement.NoInput;
+                } else if (dashInput == 0) {
+                    rb.AddForce(inputDirection * acceleration, ForceMode.Acceleration);
+                    if (rb.linearVelocity.magnitude > maxSpeed) rb.linearVelocity = rb.linearVelocity.normalized * maxSpeed;
+                } else if (dashInput == 1 && gameTime >= dashCooldownTimer) {
+                    dashTimer = gameTime + dashDuration;
+                    dashCooldownTimer = gameTime + dashCooldown;
+                    curMovement = PlayerMovement.Dash;
+                    rb.linearVelocity = inputDirection.normalized * dashSpeed;
+                }
+
+                break;
+
+            case PlayerMovement.Dash:
+                if (gameTime >= dashTimer && inputDirection.magnitude == 0){
+                    curMovement = PlayerMovement.Decelerating;
+                } else if (gameTime >= dashTimer && inputDirection.magnitude > 0) {
+                    curMovement = PlayerMovement.NormalMovement;
+                }
+
+
+                break;
+
+            case PlayerMovement.Decelerating:
+                if (inputDirection.magnitude > 0){
+                    curMovement = PlayerMovement.NormalMovement;
+                } else if (rb.linearVelocity.magnitude > 0.1f) {
+                    //deceleration
+                    Vector3 frictionForce = -rb.linearVelocity.normalized * friction;
+                    frictionForce.y = 0; //ignore vertical friction
+                    if (frictionForce.magnitude >= rb.linearVelocity.magnitude){
+                        rb.linearVelocity = Vector3.zero;
+                    } else {
+                        rb.AddForce(frictionForce, ForceMode.Acceleration);
+                    }
+                } else {
+                    rb.linearVelocity = Vector3.zero;
+                    curMovement = PlayerMovement.NoInput;
+                }
+                
+                break;
+
+            default:
+                Debug.Log("state error");
+                break;
+        }
+
+
+        /*
         //REWRITE
         if (inputDirection.magnitude > 0) {
             //detecting player input
             rb.AddForce(inputDirection * acceleration, ForceMode.Acceleration);
 
-            if (rb.linearVelocity.magnitude > maxSpeed) {
+            if (rb.linearVelocity.magnitude > maxSpeed && dashInput == 0 && gameTime < dashTimer) {
                 rb.linearVelocity = rb.linearVelocity.normalized * maxSpeed;
+            } else if (dashInput == 1 && gameTime >= dashTimer){
+                dashTimer = gameTime + dashDuration;
+                rb.linearVelocity = rb.linearVelocity.normalized * dashSpeed;
             }
+
         } else {
             //no player input - slow down
             if (rb.linearVelocity.magnitude > 0.1f) {
@@ -196,6 +294,7 @@ public class PlayerController : MonoBehaviour {
                 rb.linearVelocity = Vector3.zero;
             }
         }
+        */
 
         //FOR ANIMATIONS
         playerAnimator.SetFloat("PlayerSpeed", rb.linearVelocity.magnitude);

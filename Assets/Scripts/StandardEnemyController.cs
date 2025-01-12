@@ -169,11 +169,11 @@ public class StandardEnemyController : MonoBehaviour
     {
         if (BubblePrefab == null) return;
 
-        // Instantiate bubble and fire towards the player
         Vector3 pos = transform.position + transform.rotation * bubbleSpawnPosition;
-
-        GameObject bubble = Instantiate(BubblePrefab, pos, Quaternion.identity);
         Vector3 direction = (playerTransform.position - transform.position).normalized;
+        Quaternion rot = Quaternion.LookRotation(direction);
+
+        GameObject bubble = Instantiate(BubblePrefab, pos, rot);
         Rigidbody bubbleRb = bubble.GetComponent<Rigidbody>();
 
         if (bubbleRb != null)
@@ -207,9 +207,10 @@ public class StandardEnemyController : MonoBehaviour
         if (dead == true) return;
 
         Health -= damage;
-        if (Health <= 0)
-        {   
+        if (Health <= 0) {   
             Die();
+        } else {
+            enemyAnimator.SetTrigger("Hit");
         }
     }
 
@@ -219,5 +220,14 @@ public class StandardEnemyController : MonoBehaviour
         enemyAnimator.SetTrigger("Die");
         Destroy(gameObject, DeathAnimationLength);
         game.EnemyDeathEvent();
+        
+        //disable collider
+        Collider[] colliders = GetComponents<Collider>();
+        foreach (Collider collider in colliders) {
+            collider.enabled = false;
+        }
+        //freeze position
+        rb.constraints = RigidbodyConstraints.FreezePosition;
+        
     }
 }

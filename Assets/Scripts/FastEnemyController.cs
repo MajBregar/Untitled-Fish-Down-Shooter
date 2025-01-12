@@ -163,5 +163,14 @@ public class FastEnemyController: MonoBehaviour {
         enemyAnimator.SetTrigger("Die");
         Destroy(gameObject, DeathAnimationLength);
         game.EnemyDeathEvent();
+        
+        //disable collider
+        Collider[] colliders = GetComponents<Collider>();
+        foreach (Collider collider in colliders) {
+            collider.enabled = false;
+        }
+        //freeze position
+        rb.constraints = RigidbodyConstraints.FreezePosition;
+        
     }
 }

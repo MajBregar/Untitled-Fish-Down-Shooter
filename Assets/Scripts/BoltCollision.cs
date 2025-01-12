@@ -3,7 +3,7 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
 
-     void Update()
+    void Update()
     {
         if (Vector3.Distance(transform.position, Vector3.zero) > 200)
         {

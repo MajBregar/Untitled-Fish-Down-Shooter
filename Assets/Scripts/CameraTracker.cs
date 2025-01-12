@@ -56,4 +56,10 @@ public class CameraTracker : MonoBehaviour {
 
         return camForward.magnitude == 0 ? new Vector3(forward, 0, right) : inputDirection;
     }
+
+    public Vector3 GetMouseWorldPosition(){
+        Vector3 mouseScreenPosition = Input.mousePosition;
+        Vector3 mouseWorldPosition = cam.ScreenToWorldPoint(new Vector3(mouseScreenPosition.x, mouseScreenPosition.y, cam.transform.position.y - track.transform.position.y));
+        return mouseWorldPosition;
+    }
 }

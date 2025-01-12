@@ -153,9 +153,10 @@ public class TankEnemyController : MonoBehaviour
         if (dead == true) return;
 
         Health -= damage;
-        if (Health <= 0)
-        {   
+        if (Health <= 0) {   
             Die();
+        } else {
+            enemyAnimator.SetTrigger("Hit");
         }
     }
 
@@ -165,5 +166,14 @@ public class TankEnemyController : MonoBehaviour
         enemyAnimator.SetTrigger("Die");
         Destroy(gameObject, DeathAnimationLength);
         game.EnemyDeathEvent();
+        
+        //disable collider
+        Collider[] colliders = GetComponents<Collider>();
+        foreach (Collider collider in colliders) {
+            collider.enabled = false;
+        }
+        //freeze position
+        rb.constraints = RigidbodyConstraints.FreezePosition;
+        
     }
 }
